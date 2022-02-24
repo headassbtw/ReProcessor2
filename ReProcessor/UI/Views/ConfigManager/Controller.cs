@@ -6,6 +6,7 @@ using BeatSaberMarkupLanguage.Components;
 using BeatSaberMarkupLanguage.Parser;
 using BeatSaberMarkupLanguage.ViewControllers;
 using HMUI;
+using IPA.Utilities;
 using ReProcessor.Configuration;
 using ReProcessor.Extensions;
 using ReProcessor.Managers;
@@ -58,8 +59,8 @@ namespace ReProcessor.UI.Views.TestView
             {
                 if (prop.Value.ValueType == typeof(Single))
                 {
-                    var f = m.PrivateField(prop.Value.PropertyName);
-                    _cfg.CurrentPreset.Props[prop.Key].Value = f.GetValue(m);
+                    _cfg.CurrentPreset.Props[prop.Key].Value =
+                        m.GetProperty<object, MainEffectSO>(prop.Value.PropertyName);
                 }
             }
             _cfg.Presets[choice] = _cfg.CurrentPreset;

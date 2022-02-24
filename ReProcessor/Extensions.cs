@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Reflection;
+using IPA.Utilities;
 using ReProcessor.Configuration;
 using UnityEngine;
 using ReProcessor.Files;
@@ -14,24 +15,11 @@ namespace ReProcessor.Extensions
 
     static class Reflection
     {
-        
-        internal static Type GetPrivateFieldType(this object input, string fieldName)
-        {
-            Type type = input.GetType();
-            BindingFlags bindingFlags = BindingFlags.Instance | BindingFlags.NonPublic;
-            FieldInfo f = type.GetField(fieldName, bindingFlags);
-            return f.GetValue(input).GetType();
-        }
-        internal static T GetPrivateField<T>(this object input, string fieldName)
-        {
-            Type type = input.GetType();
-            BindingFlags bindingFlags = BindingFlags.Instance | BindingFlags.NonPublic;
-            FieldInfo f = type.GetField(fieldName, bindingFlags);
-            return (T)f.GetValue(input);
-        }
 
-        internal static FieldInfo PrivateField(this object input, string fieldName)
+        internal static FieldInfo _PrivateField(this object input, string fieldName)
         {
+            return null;
+            //return input.GetPrivateField<FieldInfo>(fieldName);
             Type type = input.GetType();
             BindingFlags bindingFlags = BindingFlags.Instance | BindingFlags.NonPublic;
             return type.GetField(fieldName, bindingFlags);
@@ -39,14 +27,7 @@ namespace ReProcessor.Extensions
         
         internal static void SetPrivateField(this object input, string fieldName, object value)
         {
-            Type type = input.GetType();
-            BindingFlags bindingFlags = BindingFlags.Instance | BindingFlags.NonPublic;
-            FieldInfo f = type.GetField(fieldName, bindingFlags);
-            if (value.GetType() == typeof(Double))
-            {
-                value = (Single) value;
-            }
-            f.SetValue(input, value);
+            input.SetField(fieldName,value);
         }
         internal static MainEffectController MainEffectController(this Camera cam)
         {
@@ -54,12 +35,11 @@ namespace ReProcessor.Extensions
         }
         internal static MainEffectContainerSO MainEffectContainerSO(this Camera cam)
         {
-            var ctl = cam.gameObject.GetComponent(typeof(MainEffectController));
-            return ctl.GetPrivateField<MainEffectContainerSO>("_mainEffectContainer");  
-        }
-        internal static object GetCameraSetting(this Camera cam, string fieldName)
-        {
-            return cam.MainEffectContainerSO().mainEffect.GetPrivateField<object>(fieldName);
+            MainEffectController ctl = cam.gameObject.GetComponent<MainEffectController>();
+            return ctl.GetField<MainEffectContainerSO, MainEffectController>("_mainEffectContainer");
+            return ctl.GetComponent<MainEffectContainerSO>();
+            return ctl.GetProperty<MainEffectContainerSO, MainEffectController>("_mainEffectContainer");
+            
         }
         internal static void SetCameraSetting(this Camera cam, string fieldName, object value)
         {
@@ -74,10 +54,14 @@ namespace ReProcessor.Extensions
         }
         internal static void SetCameraSetting(this Camera cam, CameraSetting camSetting)
         {
-            //_log.Notice($"Setting property \"{camSetting.Name}\" with type \"{camSetting.ValueType}\" and value \"{camSetting.Value}\"");
-            var eff = cam.MainEffectContainerSO().mainEffect;
-            var f = eff.PrivateField(camSetting.PropertyName);
+            var ef = cam.MainEffectContainerSO();
+            
+            var eff = ef.GetField<MainEffectSO, MainEffectContainerSO>("_mainEffect");
+            if(eff is PyramidBloomMainEffectSO pyramid)
+                pyramid.SetProperty(camSetting.PropertyName,camSetting.Value);
+            
             //Plugin.Log.Notice($"Camera value is of type \"{camSetting.Value.GetType()}\"");
+            /*
             if (camSetting.ValueType.Equals(typeof(PyramidBloomRendererSO.Pass)))
                 f.SetValue(eff,camSetting.Value.ToPass());
             else if (camSetting.ValueType.EqualsInt())
@@ -85,7 +69,7 @@ namespace ReProcessor.Extensions
             else if (camSetting.ValueType.Equals(typeof(Single)))
                 f.SetValue(eff,Convert.ToSingle(camSetting.Value));
             else
-                f.SetValue(eff, camSetting.Value);
+                f.SetValue(eff, camSetting.Value);*/
         }
         internal static void ApplySettings(this Camera cam, List<CameraSetting> camSettings)
         {

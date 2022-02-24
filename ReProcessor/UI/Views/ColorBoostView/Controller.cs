@@ -11,6 +11,7 @@ using BeatSaberMarkupLanguage.Tags;
 using BeatSaberMarkupLanguage.TypeHandlers;
 using BeatSaberMarkupLanguage.ViewControllers;
 using HMUI;
+using IPA.Utilities;
 using ReProcessor.Configuration;
 using ReProcessor.Extensions;
 using ReProcessor.Managers;
@@ -128,7 +129,8 @@ namespace ReProcessor.UI.Views.TestView
                 if (prop.Value.ValueType == typeof(Single))
                 {
                     var sld = CreateSlider(prop.Key,c);
-                    sld.associatedValue = new BSMLFieldValue(m, m.PrivateField(prop.Value.PropertyName));
+                    
+                    sld.associatedValue = new BSMLFieldValue(m, m.GetField<FieldInfo,MainEffectSO>(prop.Value.PropertyName));
                     sld.Value = Convert.ToSingle(sld.associatedValue.GetValue());
 
 
